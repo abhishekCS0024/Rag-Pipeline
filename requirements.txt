@@ -1,13 +1,13 @@
-
 faiss-cpu
 groq
-langchain-groq
-PyPDF2
-langchain_google_genai
 langchain
-streamlit
-langchain_community
-python-dotenv
+langchain-groq
+langchain-google-genai
+langchain-community
+langchain-huggingface
+sentence-transformers
+PyPDF2
 pypdf
+python-dotenv
+streamlit
 google-cloud-aiplatform>=1.38
-langchain-huggingface sentence-transformers
