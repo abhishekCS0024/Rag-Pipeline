@@ -85,7 +85,7 @@ def process_pdfs(pdf_files):
 def get_llm():
     return ChatGroq(
         groq_api_key=groq_api_key,
-        model_name="Llama3-8b-8192"
+        model_name="llama-3.1-8b-instant"
     )
 
 # Create retrieval chain
