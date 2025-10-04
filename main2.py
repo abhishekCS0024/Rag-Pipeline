@@ -9,7 +9,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain.chains import create_retrieval_chain
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -17,7 +17,6 @@ load_dotenv()
 
 # Get API keys
 groq_api_key = os.getenv('GROQ_API_KEY')
-os.environ["GOOGLE_API_KEY"] = os.getenv("GOOGLE_API_KEY")
 
 # Page configuration
 st.set_page_config(page_title="PDF Chatbot", layout="wide")
@@ -31,12 +30,21 @@ if 'chat_history' not in st.session_state:
 if 'vector_store' not in st.session_state:
     st.session_state.vector_store = None
 
+# Cache embeddings model
+@st.cache_resource
+def get_embeddings():
+    return HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2",
+        model_kwargs={'device': 'cpu'},
+        encode_kwargs={'normalize_embeddings': True}
+    )
+
 # Function to process PDFs and create vector store
 def process_pdfs(pdf_files):
     with st.spinner("Processing your PDFs... This may take a minute depending on file size."):
         try:
             # Initialize embeddings
-            embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+            embeddings = get_embeddings()
             
             # Process each PDF file
             all_docs = []
