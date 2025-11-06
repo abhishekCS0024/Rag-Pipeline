@@ -213,7 +213,7 @@ if prompt := st.chat_input("Ask a question about your PDFs..."):
                 st.session_state.chat_history.append({"role": "assistant", "content": response_text})
                 
                 # Get relevant documents for sources
-                relevant_docs = retriever.get_relevant_documents(prompt)
+                relevant_docs = retriever.invoke(prompt)
                 
                 # Display sources in expander
                 with st.expander("View document sources"):
