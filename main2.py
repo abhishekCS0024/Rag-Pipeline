@@ -4,9 +4,9 @@ import time
 import tempfile
 from langchain_groq import ChatGroq
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
-from langchain.chains.retrieval import create_retrieval_chain
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -29,6 +29,8 @@ if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 if 'vector_store' not in st.session_state:
     st.session_state.vector_store = None
+if 'retriever' not in st.session_state:
+    st.session_state.retriever = None
 
 # Cache embeddings model
 @st.cache_resource
@@ -74,11 +76,14 @@ def process_pdfs(pdf_files):
             # Create vector store
             vector_store = FAISS.from_documents(splits, embeddings)
             
-            return vector_store
+            # Create retriever
+            retriever = vector_store.as_retriever(search_kwargs={"k": 5})
+            
+            return vector_store, retriever
             
         except Exception as e:
             st.error(f"Error processing PDFs: {str(e)}")
-            return None
+            return None, None
 
 # Initialize LLM
 @st.cache_resource
@@ -88,19 +93,21 @@ def get_llm():
         model_name="llama-3.1-8b-instant"
     )
 
-# Create retrieval chain
-def create_chain(vector_store):
+# Format documents for context
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
+
+# Create RAG chain
+def create_rag_chain(retriever):
     llm = get_llm()
     
     # Create prompt template
     prompt = ChatPromptTemplate.from_template("""
     You are a helpful assistant that answers questions based on the provided PDF documents.
     
-    <context>
-    {context}
-    </context>
+    Context: {context}
     
-    Question: {input}
+    Question: {question}
     
     Answer the question based only on the provided context. If the information is not in the 
     context, say "I don't have enough information to answer this question based on the provided documents."
@@ -108,14 +115,15 @@ def create_chain(vector_store):
     Provide a clear, concise, and informative answer.
     """)
     
-    # Create document chain
-    document_chain = create_stuff_documents_chain(llm, prompt)
+    # Create RAG chain using LCEL (LangChain Expression Language)
+    rag_chain = (
+        {"context": retriever | format_docs, "question": RunnablePassthrough()}
+        | prompt
+        | llm
+        | StrOutputParser()
+    )
     
-    # Create retriever
-    retriever = vector_store.as_retriever(search_kwargs={"k": 5})
-    
-    # Create and return retrieval chain
-    return create_retrieval_chain(retriever, document_chain)
+    return rag_chain, retriever
 
 # Sidebar for PDF upload
 with st.sidebar:
@@ -125,10 +133,11 @@ with st.sidebar:
     if uploaded_files:
         if st.button("Process Documents"):
             # Process PDFs and create vector store
-            vector_store = process_pdfs(uploaded_files)
+            vector_store, retriever = process_pdfs(uploaded_files)
             
             if vector_store:
                 st.session_state.vector_store = vector_store
+                st.session_state.retriever = retriever
                 st.session_state.processed_pdfs = True
                 st.success(f"✅ Successfully processed {len(uploaded_files)} PDF files")
             else:
@@ -182,30 +191,33 @@ if prompt := st.chat_input("Ask a question about your PDFs..."):
             message_placeholder = st.empty()
             
             try:
-                # Create chain and process query
-                chain = create_chain(st.session_state.vector_store)
+                # Create RAG chain
+                rag_chain, retriever = create_rag_chain(st.session_state.retriever)
                 
                 # Start timer
                 start_time = time.time()
                 
                 # Get response
-                response = chain.invoke({"input": prompt})
+                response_text = rag_chain.invoke(prompt)
                 
                 # Calculate time
                 elapsed_time = time.time() - start_time
                 
                 # Display response
-                message_placeholder.write(response["answer"])
+                message_placeholder.write(response_text)
                 
                 # Add timing info
                 st.caption(f"Response time: {elapsed_time:.2f} seconds")
                 
                 # Add to chat history
-                st.session_state.chat_history.append({"role": "assistant", "content": response["answer"]})
+                st.session_state.chat_history.append({"role": "assistant", "content": response_text})
+                
+                # Get relevant documents for sources
+                relevant_docs = retriever.get_relevant_documents(prompt)
                 
                 # Display sources in expander
                 with st.expander("View document sources"):
-                    for i, doc in enumerate(response["context"]):
+                    for i, doc in enumerate(relevant_docs):
                         st.markdown(f"**Source {i+1}**: {doc.metadata.get('source', 'Unknown')} (Page {doc.metadata.get('page', 'Unknown')})")
                         st.markdown(f"{doc.page_content[:300]}...")
                         st.markdown("---")
