@@ -3,7 +3,7 @@ import os
 import time
 import tempfile
 from langchain_groq import ChatGroq
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.chains import create_retrieval_chain
@@ -139,6 +139,12 @@ with st.sidebar:
         st.sidebar.success("Documents processed and ready for questions")
     else:
         st.sidebar.info("Please upload and process documents first")
+    
+    # Add clear chat button
+    if st.session_state.chat_history:
+        if st.button("Clear Chat History"):
+            st.session_state.chat_history = []
+            st.rerun()
     
     # Add info section
     st.sidebar.markdown("---")
