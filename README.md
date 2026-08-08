@@ -534,65 +534,157 @@ The resulting prompt is passed to the configured LLM.
 # Project Structure
 
 ```text
-rag-pipeline/
+rag-platform/
 │
-├── app/
-│   │
-│   ├── main.py
-│   │
+├── apps/
 │   ├── api/
-│   │   ├── documents.py
-│   │   └── rag.py
+│   │   ├── main.py
+│   │   ├── dependencies.py
+│   │   │
+│   │   ├── middleware/
+│   │   │   ├── auth.py
+│   │   │   ├── request_id.py
+│   │   │   └── rate_limit.py
+│   │   │
+│   │   └── routes/
+│   │       ├── documents.py
+│   │       ├── chat.py
+│   │       └── health.py
 │   │
-│   ├── core/
-│   │   ├── config.py
-│   │   └── logging.py
+│   └── worker/
+│       ├── main.py
+│       ├── consumer.py
+│       │
+│       └── handlers/
+│           ├── process_document.py
+│           ├── reindex_document.py
+│           └── delete_document.py
+│
+│
+├── src/
 │   │
-│   ├── database/
-│   │   ├── postgres.py
-│   │   └── models/
-│   │
-│   ├── storage/
-│   │   └── s3.py
-│   │
-│   ├── messaging/
-│   │   ├── rabbitmq.py
-│   │   ├── publisher.py
-│   │   └── consumer.py
+│   ├── documents/
+│   │   ├── models.py
+│   │   ├── schemas.py
+│   │   ├── repository.py
+│   │   └── service.py
 │   │
 │   ├── ingestion/
+│   │   ├── models.py
 │   │   ├── parser.py
 │   │   ├── chunker.py
-│   │   ├── embeddings.py
-│   │   └── pipeline.py
+│   │   └── service.py
+│   │
+│   ├── indexing/
+│   │   ├── models.py
+│   │   ├── embedder.py
+│   │   ├── indexer.py
+│   │   └── service.py
 │   │
 │   ├── retrieval/
-│   │   ├── retriever.py
-│   │   ├── vector_search.py
-│   │   └── context_builder.py
+│   │   ├── models.py
+│   │   ├── service.py
+│   │   │
+│   │   ├── dense.py
+│   │   ├── sparse.py
+│   │   ├── fusion.py
+│   │   └── reranker.py
 │   │
 │   ├── generation/
-│   │   └── generator.py
+│   │   ├── models.py
+│   │   ├── context_builder.py
+│   │   ├── prompts.py
+│   │   ├── llm.py
+│   │   └── service.py
 │   │
-│   ├── repositories/
-│   │   ├── document_repository.py
-│   │   └── chunk_repository.py
+│   └── shared/
+│       ├── config.py
+│       ├── exceptions.py
+│       ├── logging.py
+│       └── constants.py
+│
+│
+├── infrastructure/
 │   │
-│   └── schemas/
-│       ├── document.py
-│       └── rag.py
+│   ├── postgres/
+│   │   ├── connection.py
+│   │   ├── session.py
+│   │   │
+│   │   ├── models/
+│   │   │   ├── document.py
+│   │   │   └── chunk.py
+│   │   │
+│   │   └── repositories/
+│   │       ├── document_repository.py
+│   │       └── chunk_repository.py
+│   │
+│   ├── vector/
+│   │   └── pgvector_store.py
+│   │
+│   ├── search/
+│   │   └── postgres_fts.py
+│   │
+│   ├── rabbitmq/
+│   │   ├── connection.py
+│   │   ├── publisher.py
+│   │   ├── consumer.py
+│   │   ├── messages.py
+│   │   └── topology.py
+│   │
+│   ├── redis/
+│   │   ├── connection.py
+│   │   ├── cache.py
+│   │   ├── locks.py
+│   │   └── rate_limiter.py
+│   │
+│   ├── parsing/
+│   │   └── docling_parser.py
+│   │
+│   ├── storage/
+│   │   ├── base.py
+│   │   ├── s3.py
+│   │   └── local.py
+│   │
+│   └── ai/
+│       ├── embedding_provider.py
+│       ├── reranker_provider.py
+│       └── llm_provider.py
 │
-├── workers/
-│   └── document_worker.py
-│
-├── tests/
 │
 ├── migrations/
+│   ├── versions/
+│   └── env.py
 │
-├── docker-compose.yml
-├── Dockerfile
-├── requirements.txt
+├── tests/
+│   ├── unit/
+│   │   ├── ingestion/
+│   │   ├── indexing/
+│   │   ├── retrieval/
+│   │   └── generation/
+│   │
+│   ├── integration/
+│   │   ├── postgres/
+│   │   ├── pgvector/
+│   │   ├── rabbitmq/
+│   │   └── redis/
+│   │
+│   └── e2e/
+│       ├── test_document_pipeline.py
+│       └── test_rag_query.py
+│
+├── scripts/
+│   ├── create_indexes.py
+│   └── seed.py
+│
+├── docker/
+│   ├── api.Dockerfile
+│   └── worker.Dockerfile
+│
 ├── .env.example
+├── alembic.ini
+├── docker-compose.yml
+├── pyproject.toml
+├── Makefile
 └── README.md
 ```
 
