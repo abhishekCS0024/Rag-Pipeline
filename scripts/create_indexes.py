@@ -1,6 +1,7 @@
 """Creates the ANN index on document_chunks.embedding. Run once after the
 initial migration (ivfflat needs data present to pick good list counts, but
 an empty-table build is fine for local/dev use)."""
+# One-off operational script: creates the ivfflat pgvector similarity index on document_chunks.embedding.
 from sqlalchemy import text
 
 from infrastructure.postgres.connection import engine

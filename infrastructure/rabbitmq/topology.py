@@ -1,3 +1,4 @@
+# Declares exchanges/queues/DLX routing for the process, reindex, and delete pipelines.
 import pika
 
 from src.shared.config import Settings

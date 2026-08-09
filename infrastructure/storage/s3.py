@@ -1,3 +1,4 @@
+# boto3-based StorageBackend implementation, supporting both AWS S3 and MinIO.
 from typing import BinaryIO
 
 import boto3

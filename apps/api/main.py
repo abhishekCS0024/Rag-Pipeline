@@ -1,3 +1,4 @@
+# FastAPI application factory: configures CORS/middleware and registers route routers.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

@@ -5,6 +5,7 @@ Revises:
 Create Date: 2026-08-07
 
 """
+# Migration: creates the documents and document_chunks tables, including the pgvector embedding column.
 from typing import Sequence, Union
 
 from alembic import op

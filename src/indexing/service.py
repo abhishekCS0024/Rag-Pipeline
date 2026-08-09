@@ -1,3 +1,4 @@
+# IndexingService - orchestrates embedding chunks and storing them into the vector store, updating document status.
 import uuid
 
 from src.documents.repository import DocumentRepository

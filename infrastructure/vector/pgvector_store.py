@@ -1,3 +1,4 @@
+# pgvector-backed vector store: persists embedded chunks for similarity search.
 import uuid
 
 from infrastructure.postgres.repositories.chunk_repository import SqlChunkRepository
@@ -21,3 +22,6 @@ class PgVectorStore:
             for ec in embedded_chunks
         ]
         self._chunk_repository.bulk_insert(document_id, tenant_id, rows)
+
+    def delete_by_document(self, document_id: uuid.UUID) -> None:
+        self._chunk_repository.delete_by_document(document_id)

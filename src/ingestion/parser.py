@@ -1,3 +1,4 @@
+# Application-layer wrapper around DoclingParser, isolating ingestion from the infrastructure adapter.
 from infrastructure.parsing.docling_parser import DoclingParser
 from src.ingestion.models import ParsedDocument
 

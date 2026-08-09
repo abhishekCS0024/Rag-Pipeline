@@ -1,6 +1,6 @@
 import json
 
-from infrastructure.rabbitmq.consumer import consume_queue
+from infrastructure.rabbitmq.consumer import consume_queue, consume_queues
 from src.shared.config import Settings
 
 
@@ -14,6 +14,7 @@ class FakeChannel:
         self.qos = None
         self.consumed_queue = None
         self.on_message = None
+        self.consumed = {}
         self.acks: list[int] = []
         self.nacks: list[tuple[int, bool]] = []
 
@@ -23,6 +24,7 @@ class FakeChannel:
     def basic_consume(self, queue, on_message_callback):
         self.consumed_queue = queue
         self.on_message = on_message_callback
+        self.consumed[queue] = on_message_callback
 
     def basic_ack(self, delivery_tag):
         self.acks.append(delivery_tag)
@@ -110,3 +112,28 @@ def test_on_message_nacks_without_requeue_on_malformed_json(monkeypatch):
 
     assert channel.nacks == [(3, False)]
     assert channel.acks == []
+
+
+def test_consume_queues_binds_each_queue_to_its_own_handler(monkeypatch):
+    channel = FakeChannel()
+    connection = FakeConnection(channel)
+    monkeypatch.setattr("infrastructure.rabbitmq.consumer.get_settings", lambda: _settings())
+    monkeypatch.setattr("infrastructure.rabbitmq.consumer.get_connection", lambda: connection)
+    monkeypatch.setattr("infrastructure.rabbitmq.consumer.declare_topology", lambda channel, settings: None)
+
+    reindex_received, delete_received = [], []
+    consume_queues(
+        {
+            "rag.document.reindex": lambda payload: reindex_received.append(payload),
+            "rag.document.delete": lambda payload: delete_received.append(payload),
+        }
+    )
+
+    assert set(channel.consumed.keys()) == {"rag.document.reindex", "rag.document.delete"}
+
+    channel.consumed["rag.document.reindex"](channel, FakeMethod(1), None, json.dumps({"a": 1}).encode())
+    channel.consumed["rag.document.delete"](channel, FakeMethod(2), None, json.dumps({"b": 2}).encode())
+
+    assert reindex_received == [{"a": 1}]
+    assert delete_received == [{"b": 2}]
+    assert channel.acks == [1, 2]

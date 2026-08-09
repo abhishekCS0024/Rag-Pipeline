@@ -1,3 +1,4 @@
+# Shared logging setup: configures root logging once from Settings and hands out named loggers.
 import logging
 
 from src.shared.config import get_settings

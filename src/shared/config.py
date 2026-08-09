@@ -1,3 +1,4 @@
+# pydantic-settings Settings loaded from .env; central config for the ingestion pipeline (extend, don't read os.environ directly).
 from functools import lru_cache
 
 from pydantic import computed_field

@@ -1,3 +1,4 @@
+# Domain models (ParsedSection, ParsedDocument, Chunk) shared by the parsing/chunking pipeline.
 from dataclasses import dataclass, field
 
 

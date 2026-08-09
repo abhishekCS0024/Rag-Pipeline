@@ -1,3 +1,4 @@
+# Handles document.uploaded events: downloads from S3, parses with Docling, chunks, embeds, and stores in pgvector, driving UPLOADED -> PROCESSING -> COMPLETED|FAILED.
 import uuid
 
 from infrastructure.ai.embedding_provider import OpenAIEmbeddingProvider

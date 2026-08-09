@@ -1,3 +1,4 @@
+# pika.BlockingConnection factory built from the RabbitMQ URL in settings.
 import pika
 
 from src.shared.config import get_settings

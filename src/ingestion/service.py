@@ -1,3 +1,4 @@
+# Orchestrates the ingestion pipeline: download from storage, parse with Docling, then chunk.
 import tempfile
 from pathlib import Path
 

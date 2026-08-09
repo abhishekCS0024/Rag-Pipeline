@@ -1,3 +1,4 @@
+# Document ingestion routes: POST /documents to upload+enqueue, GET /documents/{id} for status polling.
 import io
 import uuid
 
@@ -5,8 +6,13 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile
 
 from apps.api.dependencies import get_db_session, get_document_service
 from infrastructure.postgres.repositories.document_repository import SqlDocumentRepository
+from infrastructure.rabbitmq.publisher import publish_document_delete, publish_document_reindex
 from sqlalchemy.orm import Session
-from src.documents.schemas import DocumentStatusResponse, DocumentUploadResponse
+from src.documents.schemas import (
+    DocumentActionAcceptedResponse,
+    DocumentStatusResponse,
+    DocumentUploadResponse,
+)
 from src.documents.service import DocumentService
 from src.shared.exceptions import UnsupportedFileTypeError
 
@@ -51,3 +57,31 @@ def get_document_status(
         file_name=document.filename,
         status=document.status,
     )
+
+
+@router.post("/documents/{document_id}/reindex", response_model=DocumentActionAcceptedResponse)
+def reindex_document(
+    document_id: uuid.UUID,
+    session: Session = Depends(get_db_session),
+) -> DocumentActionAcceptedResponse:
+    repository = SqlDocumentRepository(session)
+    document = repository.get_by_id(document_id)
+    if document is None:
+        raise HTTPException(status_code=404, detail="document not found")
+
+    publish_document_reindex(document_id=document.id, tenant_id=document.tenant_id)
+    return DocumentActionAcceptedResponse(document_id=document.id, message="reindex queued")
+
+
+@router.delete("/documents/{document_id}", response_model=DocumentActionAcceptedResponse)
+def delete_document(
+    document_id: uuid.UUID,
+    session: Session = Depends(get_db_session),
+) -> DocumentActionAcceptedResponse:
+    repository = SqlDocumentRepository(session)
+    document = repository.get_by_id(document_id)
+    if document is None:
+        raise HTTPException(status_code=404, detail="document not found")
+
+    publish_document_delete(document_id=document.id, tenant_id=document.tenant_id)
+    return DocumentActionAcceptedResponse(document_id=document.id, message="delete queued")

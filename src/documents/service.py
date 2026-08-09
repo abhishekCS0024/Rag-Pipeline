@@ -1,4 +1,29 @@
 # What operation the application is trying to perform
+# DocumentService - orchestrates upload validation, storage, DB persistence, RabbitMQ event publishing.
+
+            #     HTTP Request
+            #          │
+            #          ▼
+            #   API / Controller
+            #          │
+            #          ▼
+            #     schemas.py
+            #   "What data came in?"
+            #          │
+            #          ▼
+            #     service.py
+            #   "What should happen?"
+            #          │
+            #          ▼
+            #   repository.py
+            #   "Get/save the data"
+            #          │
+            #          ▼
+            #      models.py
+            #   "What is stored?"
+            #          │
+            #          ▼
+            #      Database
 
 import uuid
 from typing import BinaryIO

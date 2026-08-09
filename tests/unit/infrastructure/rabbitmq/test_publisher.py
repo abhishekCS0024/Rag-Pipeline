@@ -3,7 +3,11 @@ import uuid
 
 import pytest
 
-from infrastructure.rabbitmq.publisher import publish_document_uploaded
+from infrastructure.rabbitmq.publisher import (
+    publish_document_delete,
+    publish_document_reindex,
+    publish_document_uploaded,
+)
 from src.shared.config import Settings
 
 
@@ -80,3 +84,37 @@ def test_publish_closes_connection_even_when_publish_raises(monkeypatch):
         publish_document_uploaded(uuid.uuid4(), uuid.uuid4(), "key")
 
     assert connection.closed is True
+
+
+def test_publish_document_reindex_sends_to_reindex_routing_key(monkeypatch):
+    channel = FakeChannel()
+    connection = FakeConnection(channel)
+    settings = _settings()
+    monkeypatch.setattr("infrastructure.rabbitmq.publisher.get_settings", lambda: settings)
+    monkeypatch.setattr("infrastructure.rabbitmq.publisher.get_connection", lambda: connection)
+    monkeypatch.setattr("infrastructure.rabbitmq.publisher.declare_topology", lambda channel, settings: None)
+    document_id, tenant_id = uuid.uuid4(), uuid.uuid4()
+
+    publish_document_reindex(document_id, tenant_id)
+
+    message = channel.published[0]
+    assert message["routing_key"] == settings.rabbitmq_reindex_routing_key
+    body = json.loads(message["body"])
+    assert body == {"event": "document.reindex", "document_id": str(document_id), "tenant_id": str(tenant_id)}
+
+
+def test_publish_document_delete_sends_to_delete_routing_key(monkeypatch):
+    channel = FakeChannel()
+    connection = FakeConnection(channel)
+    settings = _settings()
+    monkeypatch.setattr("infrastructure.rabbitmq.publisher.get_settings", lambda: settings)
+    monkeypatch.setattr("infrastructure.rabbitmq.publisher.get_connection", lambda: connection)
+    monkeypatch.setattr("infrastructure.rabbitmq.publisher.declare_topology", lambda channel, settings: None)
+    document_id, tenant_id = uuid.uuid4(), uuid.uuid4()
+
+    publish_document_delete(document_id, tenant_id)
+
+    message = channel.published[0]
+    assert message["routing_key"] == settings.rabbitmq_delete_routing_key
+    body = json.loads(message["body"])
+    assert body == {"event": "document.delete", "document_id": str(document_id), "tenant_id": str(tenant_id)}

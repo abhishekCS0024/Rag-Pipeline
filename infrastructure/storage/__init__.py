@@ -1,3 +1,4 @@
+# Storage package init; exposes get_storage_backend() factory for local/S3 backends.
 from infrastructure.storage.base import StorageBackend
 from infrastructure.storage.local import LocalStorageBackend
 from infrastructure.storage.s3 import S3StorageBackend

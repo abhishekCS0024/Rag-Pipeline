@@ -1,3 +1,5 @@
+# SQLAlchemy-based implementation of the DocumentRepository protocol (create/get/status updates).
+
 import uuid
 
 from sqlalchemy.orm import Session
@@ -55,4 +57,11 @@ class SqlDocumentRepository:
         if orm is None:
             return
         orm.status = status
+        self._session.commit()
+
+    def delete(self, document_id: uuid.UUID) -> None:
+        orm = self._session.get(DocumentORM, document_id)
+        if orm is None:
+            return
+        self._session.delete(orm)
         self._session.commit()

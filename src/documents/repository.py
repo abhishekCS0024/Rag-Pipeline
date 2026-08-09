@@ -11,7 +11,7 @@
 # Think of a repository as an abstraction over persistence.
 # DocumentService save or retrieve a document without knowing that PostgreSQL and SQLAlchemy are being used
 
-
+# DocumentRepository Protocol - the persistence interface infrastructure/postgres implements.
 import uuid
 from typing import Protocol
 
@@ -32,3 +32,5 @@ class DocumentRepository(Protocol):
     def get_by_id(self, document_id: uuid.UUID) -> Document | None: ...
 
     def update_status(self, document_id: uuid.UUID, status: DocumentStatus) -> None: ...
+
+    def delete(self, document_id: uuid.UUID) -> None: ...

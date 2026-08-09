@@ -1,3 +1,4 @@
+# EmbeddedChunk and related indexing domain models.
 from dataclasses import dataclass
 
 from src.ingestion.models import Chunk

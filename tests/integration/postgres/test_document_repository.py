@@ -37,3 +37,20 @@ def test_create_and_fetch_document(session):
 
     repository.update_status(created.id, DocumentStatus.COMPLETED)
     assert repository.get_by_id(created.id).status == DocumentStatus.COMPLETED
+
+
+def test_delete_removes_document(session):
+    repository = SqlDocumentRepository(session)
+    tenant_id = uuid.uuid4()
+
+    created = repository.create(
+        tenant_id=tenant_id,
+        filename="del.pdf",
+        content_type="application/pdf",
+        storage_key=f"tenants/{tenant_id}/documents/{uuid.uuid4()}/del.pdf",
+        checksum=None,
+    )
+
+    repository.delete(created.id)
+
+    assert repository.get_by_id(created.id) is None

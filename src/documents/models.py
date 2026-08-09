@@ -1,3 +1,4 @@
+# Document domain dataclass tracking the UPLOADED/PROCESSING/COMPLETED/FAILED status lifecycle.
 import uuid
 from dataclasses import dataclass
 from datetime import datetime

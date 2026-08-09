@@ -1,3 +1,5 @@
+# Adapter wrapping Docling to parse uploaded documents into structured, section/page-aware content.
+
 from src.ingestion.models import ParsedDocument, ParsedSection
 from src.shared.exceptions import ParsingError
 

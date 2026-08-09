@@ -1,3 +1,5 @@
+# SQLAlchemy-based implementation of chunk persistence (bulk-inserts chunks+embeddings).
+
 import uuid
 
 from sqlalchemy.orm import Session
@@ -25,4 +27,8 @@ class SqlChunkRepository:
             for chunk in chunks
         ]
         self._session.add_all(orms)
+        self._session.commit()
+
+    def delete_by_document(self, document_id: uuid.UUID) -> None:
+        self._session.query(DocumentChunkORM).filter(DocumentChunkORM.document_id == document_id).delete()
         self._session.commit()

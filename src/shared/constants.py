@@ -1,3 +1,4 @@
+# Shared constant values (e.g. document status enum) used across the app.
 from enum import StrEnum
 
 

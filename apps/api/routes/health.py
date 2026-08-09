@@ -1,3 +1,4 @@
+# Health check route for liveness/readiness probes.
 from fastapi import APIRouter
 
 router = APIRouter()

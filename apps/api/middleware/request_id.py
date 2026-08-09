@@ -1,3 +1,4 @@
+# Middleware that tags each request/response with a correlation ID header for tracing.
 import uuid
 
 from starlette.middleware.base import BaseHTTPMiddleware

@@ -1,3 +1,4 @@
+# Embedder service - pairs chunks with embeddings via the embedding provider.
 from infrastructure.ai.embedding_provider import OpenAIEmbeddingProvider
 from src.indexing.models import EmbeddedChunk
 from src.ingestion.models import Chunk

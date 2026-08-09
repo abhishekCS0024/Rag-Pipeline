@@ -1,3 +1,4 @@
+# Filesystem-based StorageBackend implementation, with path traversal protection.
 from pathlib import Path
 from typing import BinaryIO
 

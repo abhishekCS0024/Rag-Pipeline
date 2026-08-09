@@ -1,3 +1,4 @@
+# FastAPI dependency-injection factories (DB session, document service, etc) wired to concrete infra adapters.
 from collections.abc import Generator
 
 from fastapi import Depends

@@ -1,3 +1,5 @@
+# OpenAI-backed embedding provider: batches chunk text into vectors for pgvector storage.
+
 from openai import OpenAI
 
 from src.shared.config import Settings

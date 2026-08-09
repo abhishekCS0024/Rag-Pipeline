@@ -1,3 +1,4 @@
+# Shared/custom exception hierarchy used across the app's domain services.
 class AppError(Exception):
     pass
 

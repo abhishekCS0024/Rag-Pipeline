@@ -1,3 +1,4 @@
+# StorageBackend abstract interface for upload/download/delete, implemented by local and S3 backends.
 from abc import ABC, abstractmethod
 from typing import BinaryIO
 

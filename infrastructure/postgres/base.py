@@ -1,3 +1,5 @@
+# Shared SQLAlchemy declarative base class for all ORM models.
+
 from sqlalchemy.orm import DeclarativeBase
 
 

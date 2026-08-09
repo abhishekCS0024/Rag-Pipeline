@@ -1,3 +1,5 @@
+# ORM model for a document_chunks row: chunk text, tenant/section/page metadata, and its pgvector embedding.
+
 import uuid
 from datetime import datetime
 

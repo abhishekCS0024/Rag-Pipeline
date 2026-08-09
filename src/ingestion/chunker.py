@@ -1,3 +1,4 @@
+# Splits parsed documents into overlapping text chunks, preserving section/page metadata for citations.
 from src.ingestion.models import Chunk, ParsedDocument
 
 
