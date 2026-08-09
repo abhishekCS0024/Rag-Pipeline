@@ -85,3 +85,43 @@ def test_delete_by_document_removes_only_that_documents_chunks(session):
 
     remaining = session.scalars(select(DocumentChunkORM).where(DocumentChunkORM.tenant_id == tenant_id)).all()
     assert [r.document_id for r in remaining] == [keep.id]
+
+
+def test_similarity_search_orders_by_distance_and_filters_by_tenant(session):
+    tenant_id = uuid.uuid4()
+    other_tenant_id = uuid.uuid4()
+    document_repository = SqlDocumentRepository(session)
+    document = document_repository.create(
+        tenant_id=tenant_id,
+        filename="doc.pdf",
+        content_type="application/pdf",
+        storage_key=f"tenants/{tenant_id}/documents/{uuid.uuid4()}/doc.pdf",
+        checksum=None,
+    )
+    other_document = document_repository.create(
+        tenant_id=other_tenant_id,
+        filename="other.pdf",
+        content_type="application/pdf",
+        storage_key=f"tenants/{other_tenant_id}/documents/{uuid.uuid4()}/other.pdf",
+        checksum=None,
+    )
+
+    chunk_repository = SqlChunkRepository(session)
+    chunk_repository.bulk_insert(
+        document.id,
+        tenant_id,
+        [
+            {"chunk_index": 0, "content": "far", "section": None, "page": None, "embedding": _embedding(100.0)},
+            {"chunk_index": 1, "content": "close", "section": None, "page": None, "embedding": _embedding(1.0)},
+        ],
+    )
+    chunk_repository.bulk_insert(
+        other_document.id,
+        other_tenant_id,
+        [{"chunk_index": 0, "content": "other tenant", "section": None, "page": None, "embedding": _embedding(1.0)}],
+    )
+
+    results = chunk_repository.similarity_search(tenant_id, _embedding(1.0), top_k=10)
+
+    assert [chunk.content for chunk, _distance in results] == ["close", "far"]
+    assert results[0][1] < results[1][1]

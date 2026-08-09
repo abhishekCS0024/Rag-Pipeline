@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     embedding_batch_size: int = 32
     embedding_dimension: int = 1536
 
+    # Retrieval
+    dense_top_k: int = 20
+
     # Chunking
     chunk_size: int = 800
     chunk_overlap: int = 100

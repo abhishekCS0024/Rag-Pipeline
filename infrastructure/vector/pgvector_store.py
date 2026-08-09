@@ -1,8 +1,9 @@
-# pgvector-backed vector store: persists embedded chunks for similarity search.
+# pgvector-backed vector store: persists embedded chunks and serves tenant-filtered similarity search.
 import uuid
 
 from infrastructure.postgres.repositories.chunk_repository import SqlChunkRepository
 from src.indexing.models import EmbeddedChunk
+from src.retrieval.models import RetrievedChunk
 
 
 class PgVectorStore:
@@ -25,3 +26,17 @@ class PgVectorStore:
 
     def delete_by_document(self, document_id: uuid.UUID) -> None:
         self._chunk_repository.delete_by_document(document_id)
+
+    def search(self, tenant_id: uuid.UUID, query_embedding: list[float], top_k: int) -> list[RetrievedChunk]:
+        rows = self._chunk_repository.similarity_search(tenant_id, query_embedding, top_k)
+        return [
+            RetrievedChunk(
+                document_id=chunk.document_id,
+                chunk_index=chunk.chunk_index,
+                content=chunk.content,
+                section=chunk.section,
+                page=chunk.page,
+                score=distance,
+            )
+            for chunk, distance in rows
+        ]
