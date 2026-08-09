@@ -1,4 +1,5 @@
 # Orchestrates the ingestion pipeline: download from storage, parse with Docling, then chunk.
+import os
 import tempfile
 from pathlib import Path
 
@@ -20,10 +21,14 @@ class IngestionService:
         content = self._storage.download(document.storage_key)
         suffix = Path(document.filename).suffix
 
-        with tempfile.NamedTemporaryFile(suffix=suffix) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
             tmp.write(content)
-            tmp.flush()
-            parsed = self._parser.parse(tmp.name)
+            tmp_path = tmp.name
+
+        try:
+            parsed = self._parser.parse(tmp_path)
+        finally:
+            os.unlink(tmp_path)
 
         return chunk_document(
             parsed,

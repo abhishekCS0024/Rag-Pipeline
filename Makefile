@@ -1,4 +1,4 @@
-.PHONY: up down migrate run-api run-worker test
+.PHONY: up down migrate run-api run-worker run-ui test
 
 up:
 	docker compose up -d
@@ -14,6 +14,9 @@ run-api:
 
 run-worker:
 	python -m apps.worker.main
+
+run-ui:
+	streamlit run apps/streamlit_app/app.py
 
 test:
 	pytest -m "not e2e"
