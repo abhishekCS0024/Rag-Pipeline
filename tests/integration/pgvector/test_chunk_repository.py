@@ -125,3 +125,63 @@ def test_similarity_search_orders_by_distance_and_filters_by_tenant(session):
 
     assert [chunk.content for chunk, _distance in results] == ["close", "far"]
     assert results[0][1] < results[1][1]
+
+
+def test_keyword_search_ranks_by_relevance_and_filters_by_tenant(session):
+    tenant_id = uuid.uuid4()
+    other_tenant_id = uuid.uuid4()
+    document_repository = SqlDocumentRepository(session)
+    document = document_repository.create(
+        tenant_id=tenant_id,
+        filename="doc.pdf",
+        content_type="application/pdf",
+        storage_key=f"tenants/{tenant_id}/documents/{uuid.uuid4()}/doc.pdf",
+        checksum=None,
+    )
+    other_document = document_repository.create(
+        tenant_id=other_tenant_id,
+        filename="other.pdf",
+        content_type="application/pdf",
+        storage_key=f"tenants/{other_tenant_id}/documents/{uuid.uuid4()}/other.pdf",
+        checksum=None,
+    )
+
+    chunk_repository = SqlChunkRepository(session)
+    chunk_repository.bulk_insert(
+        document.id,
+        tenant_id,
+        [
+            {
+                "chunk_index": 0,
+                "content": "pgvector stores embeddings for similarity search",
+                "section": None,
+                "page": None,
+                "embedding": _embedding(1.0),
+            },
+            {
+                "chunk_index": 1,
+                "content": "rabbitmq handles asynchronous message queues",
+                "section": None,
+                "page": None,
+                "embedding": _embedding(2.0),
+            },
+        ],
+    )
+    chunk_repository.bulk_insert(
+        other_document.id,
+        other_tenant_id,
+        [
+            {
+                "chunk_index": 0,
+                "content": "pgvector embeddings mentioned for another tenant",
+                "section": None,
+                "page": None,
+                "embedding": _embedding(1.0),
+            }
+        ],
+    )
+
+    results = chunk_repository.keyword_search(tenant_id, "embeddings", top_k=10, language="english")
+
+    assert [chunk.content for chunk, _rank in results] == ["pgvector stores embeddings for similarity search"]
+    assert results[0][0].document_id == document.id

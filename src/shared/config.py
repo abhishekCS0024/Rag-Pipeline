@@ -66,6 +66,16 @@ class Settings(BaseSettings):
 
     # Retrieval
     dense_top_k: int = 20
+    sparse_top_k: int = 20
+    fusion_top_k: int = 30
+    rrf_k: int = 60
+    rerank_top_k: int = 5
+    reranking_enabled: bool = True
+    fts_language: str = "english"
+
+    # Reranker
+    reranker_provider: str = "cross-encoder"
+    reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
     # Chunking
     chunk_size: int = 800

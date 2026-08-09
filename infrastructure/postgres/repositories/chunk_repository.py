@@ -2,7 +2,7 @@
 
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from infrastructure.postgres.models.chunk import DocumentChunkORM
@@ -46,3 +46,23 @@ class SqlChunkRepository:
             .limit(top_k)
         )
         return [(row.DocumentChunkORM, row.distance) for row in self._session.execute(stmt)]
+
+    def keyword_search(
+        self, tenant_id: uuid.UUID, query: str, top_k: int, language: str
+    ) -> list[tuple[DocumentChunkORM, float]]:
+        """Returns (chunk, ts_rank) pairs ordered best-first, filtered to tenant_id.
+
+        # ponytail: to_tsvector computed on the fly, no GIN index — fine at dev
+        # scale, add a functional index if full-table scans become a bottleneck.
+        """
+        tsvector = func.to_tsvector(language, DocumentChunkORM.content)
+        tsquery = func.plainto_tsquery(language, query)
+        rank = func.ts_rank(tsvector, tsquery)
+        stmt = (
+            select(DocumentChunkORM, rank.label("rank"))
+            .where(DocumentChunkORM.tenant_id == tenant_id)
+            .where(tsvector.op("@@")(tsquery))
+            .order_by(rank.desc())
+            .limit(top_k)
+        )
+        return [(row.DocumentChunkORM, row.rank) for row in self._session.execute(stmt)]
