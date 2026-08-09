@@ -1,7 +1,7 @@
 # Handles document.reindex events: deletes existing chunks and re-runs parse/chunk/embed/store for a document.
 import uuid
 
-from infrastructure.ai.embedding_provider import OpenAIEmbeddingProvider
+from infrastructure.ai.embedding_provider import HuggingFaceEmbeddingProvider
 from infrastructure.postgres.repositories.chunk_repository import SqlChunkRepository
 from infrastructure.postgres.repositories.document_repository import SqlDocumentRepository
 from infrastructure.postgres.session import SessionLocal
@@ -40,7 +40,7 @@ def handle_document_reindex(payload: dict) -> None:
             chunk_repository = SqlChunkRepository(session)
             chunk_repository.delete_by_document(document_id)
 
-            embedder = Embedder(OpenAIEmbeddingProvider(settings))
+            embedder = Embedder(HuggingFaceEmbeddingProvider(settings))
             store = PgVectorStore(chunk_repository)
             indexing_service = IndexingService(embedder, store, document_repository)
             indexing_service.index(document_id, tenant_id, chunks)

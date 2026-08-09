@@ -45,11 +45,24 @@ class Settings(BaseSettings):
     rabbitmq_prefetch_count: int = 2
 
     # Embeddings
-    embedding_provider: str = "openai"
-    embedding_model: str = "text-embedding-3-small"
+    embedding_provider: str = "huggingface"
+    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     embedding_api_key: str = ""
     embedding_batch_size: int = 32
-    embedding_dimension: int = 1536
+    embedding_dimension: int = 384
+
+    # LLM
+    llm_provider: str = "groq"
+    llm_model: str = "llama-3.1-8b-instant"
+    llm_api_key: str = ""
+    llm_temperature: float = 0.1
+    llm_max_tokens: int = 2048
+    llm_timeout_seconds: int = 60
+
+    # RAG generation
+    max_context_chunks: int = 5
+    max_context_tokens: int = 8000
+    return_citations: bool = True
 
     # Retrieval
     dense_top_k: int = 20

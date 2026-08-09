@@ -5,13 +5,15 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 
-from infrastructure.ai.embedding_provider import OpenAIEmbeddingProvider
+from infrastructure.ai.embedding_provider import HuggingFaceEmbeddingProvider
+from infrastructure.ai.llm_provider import GroqLLMProvider
 from infrastructure.postgres.repositories.chunk_repository import SqlChunkRepository
 from infrastructure.postgres.repositories.document_repository import SqlDocumentRepository
 from infrastructure.postgres.session import SessionLocal
 from infrastructure.storage import get_storage_backend
 from infrastructure.vector.pgvector_store import PgVectorStore
 from src.documents.service import DocumentService
+from src.generation.service import GenerationService
 from src.retrieval.dense import DenseRetriever
 from src.retrieval.service import RetrievalService
 from src.shared.config import get_settings
@@ -34,6 +36,16 @@ def get_document_service(session: Session = Depends(get_db_session)) -> Document
 def get_retrieval_service(session: Session = Depends(get_db_session)) -> RetrievalService:
     settings = get_settings()
     searcher = PgVectorStore(SqlChunkRepository(session))
-    embedder = OpenAIEmbeddingProvider(settings)
+    embedder = HuggingFaceEmbeddingProvider(settings)
     dense_retriever = DenseRetriever(embedder, searcher)
     return RetrievalService(dense_retriever, top_k=settings.dense_top_k)
+
+
+def get_generation_service() -> GenerationService:
+    settings = get_settings()
+    llm_provider = GroqLLMProvider(settings)
+    return GenerationService(
+        llm_provider,
+        max_context_chunks=settings.max_context_chunks,
+        return_citations=settings.return_citations,
+    )

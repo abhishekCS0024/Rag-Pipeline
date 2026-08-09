@@ -1,20 +1,25 @@
-# OpenAI-backed embedding provider: batches chunk text into vectors for pgvector storage.
-
-from openai import OpenAI
+# Local sentence-transformers embedding provider: batches chunk text into vectors for pgvector storage.
 
 from src.shared.config import Settings
 
 
-class OpenAIEmbeddingProvider:
+class HuggingFaceEmbeddingProvider:
+    """Wraps sentence-transformers to embed text locally (no external API call).
+
+    sentence-transformers (and its torch dependency) is imported lazily so this
+    module doesn't require the heavy dependency chain unless a
+    HuggingFaceEmbeddingProvider is actually instantiated, matching the
+    lazy-import treatment already used for docling in
+    infrastructure/parsing/docling_parser.py.
+    """
+
     def __init__(self, settings: Settings):
-        self._client = OpenAI(api_key=settings.embedding_api_key)
-        self._model = settings.embedding_model
+        from sentence_transformers import SentenceTransformer
+
+        self._model = SentenceTransformer(settings.embedding_model)
         self._batch_size = settings.embedding_batch_size
 
     def embed(self, texts: list[str]) -> list[list[float]]:
-        vectors: list[list[float]] = []
-        for i in range(0, len(texts), self._batch_size):
-            batch = texts[i : i + self._batch_size]
-            response = self._client.embeddings.create(model=self._model, input=batch)
-            vectors.extend(item.embedding for item in response.data)
-        return vectors
+        if not texts:
+            return []
+        return self._model.encode(texts, batch_size=self._batch_size).tolist()

@@ -1,7 +1,7 @@
 # Handles document.uploaded events: downloads from S3, parses with Docling, chunks, embeds, and stores in pgvector, driving UPLOADED -> PROCESSING -> COMPLETED|FAILED.
 import uuid
 
-from infrastructure.ai.embedding_provider import OpenAIEmbeddingProvider
+from infrastructure.ai.embedding_provider import HuggingFaceEmbeddingProvider
 from infrastructure.postgres.repositories.chunk_repository import SqlChunkRepository
 from infrastructure.postgres.repositories.document_repository import SqlDocumentRepository
 from infrastructure.postgres.session import SessionLocal
@@ -37,7 +37,7 @@ def handle_document_uploaded(payload: dict) -> None:
             ingestion_service = IngestionService(storage)
             chunks = ingestion_service.process(document)
 
-            embedder = Embedder(OpenAIEmbeddingProvider(settings))
+            embedder = Embedder(HuggingFaceEmbeddingProvider(settings))
             store = PgVectorStore(SqlChunkRepository(session))
             indexing_service = IndexingService(embedder, store, document_repository)
             indexing_service.index(document_id, tenant_id, chunks)

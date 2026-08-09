@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from apps.api.middleware.request_id import RequestIdMiddleware
-from apps.api.routes import documents, health
+from apps.api.routes import chat, documents, health
 from src.shared.config import get_settings
 
 settings = get_settings()
@@ -23,3 +23,4 @@ app.add_middleware(RequestIdMiddleware)
 
 app.include_router(health.router)
 app.include_router(documents.router)
+app.include_router(chat.router)
